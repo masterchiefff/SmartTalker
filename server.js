@@ -1,5 +1,5 @@
 const express = require('express');
-
+const { Configuration, OpenAIApi } = require("openai");
 const dotenv = require('dotenv')
 
 dotenv.config();
@@ -10,6 +10,13 @@ const credentials = {
     apiKey: process.env.apiKey,
     username: process.env.username
 }
+
+const configuration = new Configuration({
+    organization: process.env.openAIOrganisation,
+    apiKey: process.env.openAIKey,
+})
+
+const openai = new OpenAIApi(configuration);
 
 const AfricasTalking = require('africastalking')(credentials);
 
@@ -32,10 +39,28 @@ module.exports = function smsServer() {
           });
     })
 
-    app.get('/incoming', (req, res) => {
-        const data = req.body;
-        console.log(data)
-        res.sendStatus(200)
+    app.post('/sms', async (req, res) => {
+        const prompt = req.body.prompt;
+
+        try {
+          if (prompt == null) {
+            throw new Error("no prompt was provided");
+          }
+
+          const response = await openai.createCompletion({
+            model: "text-davinci-003",
+            prompt,
+          });
+          
+          const completion = response.data.choices[0].text;
+          console.log(response.data)
+          return res.status(200).json({
+            success: true,
+            message: completion,
+          });
+        } catch (error) {
+          console.log(error.message);
+        }
     })
 
     const port = process.env.PORT;
