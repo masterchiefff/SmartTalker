@@ -13,8 +13,6 @@ const credentials = {
 
 const AfricasTalking = require('africastalking')(credentials);
 
-console.log(process.env.username)
-
 module.exports = function smsServer() {
     app.use(express.json());
     app.use(express.urlencoded({extended: false}));
@@ -32,6 +30,12 @@ module.exports = function smsServer() {
             console.log(error);
             res.json(error.toString());
           });
+    })
+
+    app.get('/incoming', (req, res) => {
+        const data = req.body;
+        console.log(data)
+        res.sendStatus(200)
     })
 
     const port = process.env.PORT;
